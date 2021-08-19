@@ -33,7 +33,7 @@ class AuthController extends Controller
         ]);
 
         // Create token
-        $token = $user->createToken('my-device')->plainTextToken;
+        $token = $user->createToken($request->userAgent(), ["$user->role"])->plainTextToken;
 
         $response = [
             'user'  => $user,
@@ -71,7 +71,7 @@ class AuthController extends Controller
             $user->tokens()->delete();
 
             // Create token
-            $token = $user->createToken('my-device')->plainTextToken;
+            $token = $user->createToken($request->userAgent(), ["$user->role"])->plainTextToken;
 
             $response = [
                 'user'  => $user,
@@ -80,6 +80,13 @@ class AuthController extends Controller
 
             return response($response, 201);
         }
+    }
 
+    // Logout 
+    public function logout(Request $request){
+        auth()->user()->tokens()->delete();
+        return[
+            'message' => 'Logged Out'
+        ];
     }
 }

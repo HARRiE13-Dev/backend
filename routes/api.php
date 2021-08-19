@@ -29,6 +29,7 @@ Route::post('login', [AuthController::class, 'login']);
 //PROTECTED Route::resource('user', UserController::class);
 Route::group(['middleware' => 'auth:sanctum'], function(){
     Route::resource('products', ProductController::class);
-
+    Route::post('logout', [AuthController::class, 'logout']);
+    
 });
 
