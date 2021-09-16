@@ -62,7 +62,7 @@ class AuthController extends Controller
         {
             return response([
                 'message' => 'Invalid login',
-            ]);
+            ], 401);
         }
         else
         {
