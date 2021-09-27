@@ -15,7 +15,10 @@ class ProductController extends Controller
     public function index()
     {
         // Read All Products
-        return Product::all();
+        //return Product::all();
+
+        //Read Sep page
+        return Product::orderBy('id', 'desc') -> paginate(25);
     }
 
     /**
