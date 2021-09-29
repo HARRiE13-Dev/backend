@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use Illuminate\Http\Request;
+use Image;
 
 class ProductController extends Controller
 {
@@ -18,7 +19,7 @@ class ProductController extends Controller
         //return Product::all();
 
         //Read Sep page
-        return Product::orderBy('id', 'desc') -> paginate(25);
+        return Product::orderBy('id', 'desc')->paginate(25);
     }
 
     /**
@@ -29,24 +30,69 @@ class ProductController extends Controller
      */
     public function store(Request $request)
     {
-        // Role
+        // เช็คสิทธิ์ (role) ว่าเป็น admin (1) 
         $user = auth()->user();
 
-        if ($user->tokenCan("1"))
-        {
+        if($user->tokenCan("1")){
+
+            // Validate form
             $request->validate([
-                'name'  => 'required|min:5',
-                'slug'  => 'required',
-                'price' => 'required',
+                'name' => 'required|min:3',
+                'slug' => 'required',
+                'price' => 'required'
             ]);
 
-            return Product::create($request->all());
-        }
-        else
-        {
-            return [
-                "status" => 'Permission denied to create',
+            // กำหนดตัวแปรรับค่าจากฟอร์ม
+            $data_product = array(
+                'name' => $request->input('name'),
+                'description' => $request->input('description'),
+                'slug' => $request->input('slug'),
+                'price' => $request->input('price'),
+                'user_id' => $user->id
+            );
 
+            // รับไฟล์ภาพเข้ามา
+            $image = $request->file('file');
+
+            // เช็คว่าผู้ใช้มีการอัพโหลดภาพเข้ามาหรือไม่
+            if(!empty($image)){
+                
+                // อัพโหลดรูปภาพ
+                // เปลี่ยนชื่อรูปที่ได้
+                $file_name = "product_".time().".".$image->getClientOriginalExtension();
+
+                // กำหนดขนาดความกว้าง และสูง ของภาพที่ต้องการย่อขนาด
+                $imgWidth = 400;
+                $imgHeight = 400;
+                $folderupload = public_path('/images/products/thumbnail');
+                $path = $folderupload."/".$file_name;
+
+                // อัพโหลดเข้าสู่ folder thumbnail
+                $img = Image::make($image->getRealPath());
+                $img->orientate()->fit($imgWidth,$imgHeight, function($constraint){
+                    $constraint->upsize();
+                });
+                $img->save($path);
+
+                // อัพโหลดภาพต้นฉบับเข้า folder original
+                $destinationPath = public_path('/images/products/original');
+                $image->move($destinationPath, $file_name);
+
+                // กำหนด path รูปเพื่อใส่ตารางในฐานข้อมูล
+                $data_product['image'] = url('/').'/images/products/thumbnail/'.$file_name;
+
+            }else{
+
+                $data_product['image'] = url('/').'/images/products/thumbnail/no-img.png';
+            }
+
+            // Create data to tabale product
+            return Product::create($data_product);
+
+            
+        }else{
+            return [
+                'status' => 'Permission denied to create'
             ];
         }
     }
