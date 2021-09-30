@@ -15,11 +15,19 @@ class Product extends Model
         'description',
         'price',
         'image',
-        'user_id',
+        'user_id'
     ];
 
-    public function user()
-    {
-        return $this->belongsTo(User::class);
+    /**
+     * Relationship to Users
+     */
+    public function users(){
+
+        // SELECT * 
+        // FROM products
+        // INNER JOIN users
+        // ON products.user_id = users.id;
+
+        return $this->belongsTo('App\Models\User','user_id')->select(['id','fullname','avatar']); 
     }
 }
